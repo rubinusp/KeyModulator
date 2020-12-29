@@ -1,12 +1,23 @@
+# 1.Standard Modules
+import getopt
+import sys
 import datetime as dt
+
+# 2. Extension Modules
 from matplotlib import pyplot as plt
 import numpy as np
 import scipy.io.wavfile as sp_io_wav
 import scipy.fft as fft
 
-class KeyShifter:
+USAGE = "KeyModulator.py <inputfile> <outputfile> <shift>"
 
-    def __init__(self, frame_len, overlap):
+
+class KeyModulator:
+
+    def __init__(self, frame_len, overlap, verbose=False):
+
+        self.verbose = verbose
+
         self.audio = None
         self.sample_rate = -1
         self.n_samples = -1         # Number of multi-channel samples
@@ -99,18 +110,23 @@ class KeyShifter:
         return frames
 
     def read(self, path):
-        print(f"Reading audio from {path}")
-        self.sample_rate, self.audio = sp_io_wav.read(path)
-        self.n_samples = len(self.audio)
-        self.n_channels = self.audio.shape[1]
-        self.duration = self.n_samples / self.sample_rate
 
-        print(f"Audio matrix = {self.audio}")
-        print(f"Sample rate = {self.sample_rate}")
-        print(f"Number of samples = {self.n_samples}")
-        print(f"Number of channels = {self.n_channels}")
-        print(f"Duration = {self.duration} {str(dt.timedelta(seconds=self.duration))}")
-        print()
+        try:
+            print(f"Reading audio from {path}")
+            self.sample_rate, self.audio = sp_io_wav.read(path)
+            self.n_samples = len(self.audio)
+            self.n_channels = self.audio.shape[1]
+            self.duration = self.n_samples / self.sample_rate
+
+            print(f"Audio matrix = {self.audio}")
+            print(f"Sample rate = {self.sample_rate}")
+            print(f"Number of samples = {self.n_samples}")
+            print(f"Number of channels = {self.n_channels}")
+            print(f"Duration = {self.duration} {str(dt.timedelta(seconds=self.duration))}")
+            print()
+        except Exception as e:
+            print(e)
+            exit(-2)
 
     def write(self, path):
         print(f"Writing audio to {path}")
@@ -133,10 +149,37 @@ class KeyShifter:
         plt.show()
 
 
-if __name__ == "__main__":
-    ks = KeyShifter(frame_len=12000, overlap=0.75)
-    ks.read("lydia_orig.wav")
+def parse_argv(argv):
+
+    try:
+        opts, args = getopt.getopt(argv, "hv")
+        if len(args) != 3:
+            print(f"usage: {USAGE}")
+            exit(-2)
+
+        input = args[0]
+        output = args[1]
+        shift = args[2]
+        return False, False, input, output, int(shift)
+    except getopt.GetoptError:
+        print(f"usage: {USAGE}")
+        exit(-2)
+
+
+def main(argv):
+    show_help, verbose, input, output, shift = parse_argv(argv)
+
+    if show_help:
+        print("To be completed")
+        exit()
+
+    ks = KeyModulator(frame_len=12000, overlap=0.75, verbose=verbose)
+    ks.read(input)
     # 7 semitones up = 1.5
     # 7 semitones down = 0.67
-    ks.shift(4)
-    ks.write("lydia_shift_up_4_no_fft_has_windowing_12000.wav")
+    ks.shift(shift)
+    ks.write(output)
+
+
+if __name__ == "__main__":
+    main(sys.argv[1:])
