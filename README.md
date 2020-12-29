@@ -13,12 +13,14 @@ faciliate the key modulation process with great efficiency.
 2) Navigate the terminal to the working directory of the repository
 3) Install the module dependency using pip
 
-```pip install matplotlib numpy scipy
+```
+pip install matplotlib numpy scipy
 ```
 
 3) Check that the program can be run by typing:
 
-```python KeyModulator.py --help
+```
+python KeyModulator.py --help
 ``` 
     
    This should display an usage statement of the program
@@ -27,7 +29,8 @@ faciliate the key modulation process with great efficiency.
     
 ## Usage
 
-```python KeyModulator.py [option] <inputfile> <outputfile> <shift>
+```
+python KeyModulator.py [option] <inputfile> <outputfile> <shift>
 ```
 
 * **Inputfile**: it specifies the path to the song for modulation
