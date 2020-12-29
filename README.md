@@ -3,6 +3,10 @@ Key Modulator is a tool for shifting the key of a song to another. Currently it 
 
 * It only supports WAV files currently
 
+### Demo
+Original song: https://soundcloud.com/gordon-poon-488991482/lydia_orig/s-B4qds1VBYy4
+Modulated song (+4): https://soundcloud.com/gordon-poon-488991482/lydia_modulated/s-mMRC2RMO9yV
+
 ## Purpose
 Singers often find it difficult to learn new songs with high pitches. Before they can master the pitches, it is best to 
 lower the key of songs so that the singers may focus on other aspects of the songs first. The tool is designed to help 
