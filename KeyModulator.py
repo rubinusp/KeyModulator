@@ -1,7 +1,8 @@
 # 1.Standard Modules
+import datetime as dt
 import getopt
 import sys
-import datetime as dt
+import textwrap
 
 # 2. Extension Modules
 from matplotlib import pyplot as plt
@@ -9,7 +10,7 @@ import numpy as np
 import scipy.io.wavfile as sp_io_wav
 import scipy.fft as fft
 
-USAGE = "KeyModulator.py <inputfile> <outputfile> <shift>"
+USAGE = "KeyModulator.py [option] <inputfile> <outputfile> <shift>"
 
 
 class KeyModulator:
@@ -138,7 +139,7 @@ class KeyModulator:
                 print()
         except Exception as e:
             print(e)
-            exit(-2)
+            exit(-1)
 
     def write(self, path):
         if self.verbose:
@@ -149,7 +150,7 @@ class KeyModulator:
             sp_io_wav.write(path, self.sample_rate, normalized_audio)
         except Exception as e:
             print(e)
-            exit(-2)
+            exit(-1)
 
     def plot(self):
         plot_rate = 100     # Number of plotted points per second
@@ -173,18 +174,26 @@ def parse_argv(argv):
         opts, args = getopt.getopt(argv, "hv")
 
         verbose = False
+        show_help = False
         for opt, val in opts:
             if opt == "-v":
                 verbose = True
+            if opt == "-h" or opt == "--help":
+                show_help = True
+
+        if show_help:
+            # No audio processing
+            return show_help, verbose, None, None, None
 
         if len(args) != 3:
+            # Invalid arguments
             print(f"usage: {USAGE}")
             exit(-2)
 
         input = args[0]
         output = args[1]
         shift = args[2]
-        return False, verbose, input, output, int(shift)
+        return show_help, verbose, input, output, int(shift)
     except getopt.GetoptError:
         print(f"usage: {USAGE}")
         exit(-2)
@@ -194,7 +203,12 @@ def main(argv):
     show_help, verbose, input, output, shift = parse_argv(argv)
 
     if show_help:
-        print("To be completed")
+        print(textwrap.dedent(f"""\
+        usage: {USAGE}
+        Options and arguments
+        -h  : print this help message and exit
+        -v  : verbose (trace algorithm stages and extracted properties from the audio)
+        """))
         exit()
 
     ks = KeyModulator(frame_len=12000, overlap=0.75, verbose=verbose)
