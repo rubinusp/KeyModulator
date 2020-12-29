@@ -4,7 +4,7 @@ Key Modulator is a tool for shifting the key of a song to another. Currently it 
 * It only supports WAV files currently
 
 ### Demo
-Original song: https://soundcloud.com/gordon-poon-488991482/lydia_orig/s-B4qds1VBYy4
+Original song: https://www.youtube.com/watch?v=ZOHsd6Zk7DM&ab_channel=TimelessMusic
 
 Modulated song (+4): https://soundcloud.com/gordon-poon-488991482/lydia_modulated/s-mMRC2RMO9yV
 
