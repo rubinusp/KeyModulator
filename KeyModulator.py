@@ -1,6 +1,7 @@
 # 1.Standard Modules
 import datetime as dt
 import getopt
+import logging
 import sys
 import textwrap
 
@@ -15,9 +16,7 @@ USAGE = "KeyModulator.py [option] <inputfile> <outputfile> <shift>"
 
 class KeyModulator:
 
-    def __init__(self, frame_len, overlap, verbose=False):
-
-        self.verbose = verbose
+    def __init__(self, frame_len, overlap):
 
         self.audio = None
         self.sample_rate = -1
@@ -34,9 +33,10 @@ class KeyModulator:
 
         self.freq_ratio = 2 ** (1/12)
 
+        self.logger = logging.getLogger(__name__)
+
     def shift(self, semitone):
-        if self.verbose:
-            print("Shifting semitones")
+        self.logger.info("Shifting semitones")
 
         # Semitone = 1, i.e. one semitone up
         # Semitone = 0, i.e. no shifting
@@ -50,28 +50,23 @@ class KeyModulator:
         self.new_audio = self._resample()
 
     def _resample(self):
-        if self.verbose:
-            print("Resampling the synthesized audio to change the key")
-            print()
+        self.logger.info("Resampling the synthesized audio to change the key")
 
         sam_x = np.linspace(0, self.new_n_samples, num=self.n_samples, endpoint=False)
         sam_y = np.interp(sam_x, [i for i in range(self.new_n_samples)], self.new_audio)
         return sam_y
 
     def _synthesize(self, frames, slow):
-        if self.verbose:
-            print("Synthesizing frames")
+        self.logger.info("Synthesizing frames")
 
         self.new_n_samples = int(slow * self.n_samples)
         audio = np.zeros(self.new_n_samples)
         new_hop_size = int((self.new_n_samples - len(frames[-1])) / (self.n_frames - 1))
         new_duration = self.new_n_samples / self.sample_rate
 
-        if self.verbose:
-            print(f"New number of samples = {self.new_n_samples}")
-            print(f"New duration = {new_duration} {str(dt.timedelta(seconds=new_duration))}")
-            print(f"New hop size = {new_hop_size}")
-            print()
+        self.logger.debug(f"New number of samples = {self.new_n_samples}")
+        self.logger.debug(f"New duration = {new_duration} {str(dt.timedelta(seconds=new_duration))}")
+        self.logger.debug(f"New hop size = {new_hop_size}")
 
         i = 0
         for frame in frames:
@@ -81,16 +76,13 @@ class KeyModulator:
         return audio
 
     def _apply_window(self, frames):
-        if self.verbose:
-            print("Applying Hanning window")
-            print()
+        self.logger.info("Applying Hanning window")
 
         windowed_frames = [frame * np.hanning(len(frame)) for frame in frames]
         return windowed_frames
 
     def _create_frames(self):
-        if self.verbose:
-            print("Creating frames")
+        self.logger.info("Creating frames")
 
         audio = self.audio[:, 0].ravel()
         frames = []
@@ -106,50 +98,40 @@ class KeyModulator:
 
         self.n_frames = len(frames)
         # frame_len / 4 * (n_frames - 1) + last_frame_len = n_samples
-        if self.verbose:
-            print(f"Frame length = {self.frame_len}")
-            print(f"Length of last frame = {len(frames[-1])}")
-            print(f"Hop size = {self.hop_size}")
-            print(f"Number of frames = {self.n_frames}")
-            print()
-
-        # Checking the frames overlap
-        # print(frames[0][12000:12000+4])
-        # print(frames[1][0:0+4])
+        self.logger.debug(f"Frame length = {self.frame_len}")
+        self.logger.debug(f"Length of last frame = {len(frames[-1])}")
+        self.logger.debug(f"Hop size = {self.hop_size}")
+        self.logger.debug(f"Number of frames = {self.n_frames}")
 
         return frames
 
     def read(self, path):
 
         try:
-            if self.verbose:
-                print(f"Reading audio from {path}")
+            self.logger.info(f"Reading audio from {path}")
 
             self.sample_rate, self.audio = sp_io_wav.read(path)
             self.n_samples = len(self.audio)
             self.n_channels = self.audio.shape[1]
             self.duration = self.n_samples / self.sample_rate
 
-            if self.verbose:
-                print(f"Audio matrix = {self.audio}")
-                print(f"Sample rate = {self.sample_rate}")
-                print(f"Number of samples = {self.n_samples}")
-                print(f"Number of channels = {self.n_channels}")
-                print(f"Duration = {self.duration} {str(dt.timedelta(seconds=self.duration))}")
-                print()
+            # self.logger.info(f"Audio matrix = {self.audio}")
+            self.logger.debug(f"Sample rate = {self.sample_rate}")
+            self.logger.debug(f"Number of samples = {self.n_samples}")
+            self.logger.debug(f"Number of channels = {self.n_channels}")
+            self.logger.debug(f"Duration = {self.duration} {str(dt.timedelta(seconds=self.duration))}")
         except Exception as e:
-            print(e)
+            logging.error(e)
             exit(-1)
 
     def write(self, path):
-        if self.verbose:
-            print(f"Writing audio to {path}")
+        self.logger.info(f"Writing audio to {path}")
 
         try:
             normalized_audio = np.int16((self.new_audio / self.new_audio.max()) * 32767)
             sp_io_wav.write(path, self.sample_rate, normalized_audio)
         except Exception as e:
-            print(e)
+            logging.error(e)
             exit(-1)
 
     def plot(self):
@@ -211,7 +193,14 @@ def main(argv):
         """))
         exit()
 
-    ks = KeyModulator(frame_len=12000, overlap=0.75, verbose=verbose)
+    logging.basicConfig()
+    logger = logging.getLogger(__name__)
+    if verbose:
+        logger.setLevel(logging.DEBUG)
+    else:
+        logger.setLevel(logging.INFO)
+
+    ks = KeyModulator(frame_len=14000, overlap=0.75)
     ks.read(input)
     # 7 semitones up = 1.5
     # 7 semitones down = 0.67

@@ -21,7 +21,7 @@ class MainView(QDialog):
         # Shifter Property
         self.keyModulator = KeyModulator(frame_len=12000, overlap=0.75)
         self.inFile = ""
-        self.writeFile = ""
+        self.outFile = ""
         self.shift = 0
 
         # UI Components
@@ -35,6 +35,9 @@ class MainView(QDialog):
         self.keySlider = None
         self.shiftText = None
         self.buttonBox = None
+
+        self.progressTextEdit = None
+        self.proc = None
 
         self._setup_ui()
 
@@ -82,8 +85,13 @@ class MainView(QDialog):
         controlGroupBox = QGroupBox("Control")
         controlGroupBox.setLayout(controlLayout)
 
+        # self.progressTextEdit = QTextEdit()
+        # self.proc = QProcess(self)
+        # self.proc.readyReadStandardOutput.connect(self._display_progress)
+        # self.proc.start()
+
         # Create standard button box
-        self.buttonBox = QDialogButtonBox(QDialogButtonBox.Apply | QDialogButtonBox.Cancel, Qt.Horizontal)
+        self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, Qt.Horizontal)
 
         # Add button signal
         self.buttonBox.accepted.connect(self._shift)
@@ -93,10 +101,15 @@ class MainView(QDialog):
         mainLayout = QVBoxLayout()
         mainLayout.addWidget(ioGroupBox)
         mainLayout.addWidget(controlGroupBox)
+        mainLayout.addWidget(self.progressTextEdit)
         mainLayout.addWidget(self.buttonBox)
 
         # Set dialog layout
         self.setLayout(mainLayout)
+
+    # @pyqtSlot()
+    # def _display_progress(self):
+    #     self.progressTextEdit.setText("here")
 
     def _set_key_shift(self):
 
@@ -112,9 +125,11 @@ class MainView(QDialog):
     def _shift(self):
 
         try:
+            self.outFile = f"{self.outputTextEdit.text()}.wav"
             self.keyModulator.read(self.inFile)
             self.keyModulator.shift(self.shift)
-            self.keyModulator.write()
+            self.keyModulator.write(self.outFile)
+            self._on_success()
         except Exception as e:
             msg = QMessageBox()
             msg.setWindowModality(Qt.WindowModal)
@@ -128,18 +143,23 @@ class MainView(QDialog):
             file, format = QFileDialog.getOpenFileName(self)
             if file != "":
                 self.fileText.setText(f"...{file[-15:]}")
+                self.inFile = file
         except Exception as e:
             msg = QMessageBox()
             msg.setWindowModality(Qt.WindowModal)
             msg.setText(str(e))
             msg.exec_()
 
+    def _on_success(self):
+        # Close the dialog
+        self.close()
+
 
 def main():
 
     app = QApplication(sys.argv)
     QCoreApplication.setOrganizationName("Gordon Poon")
-    QCoreApplication.setApplicationName("Key Shifter")
+    QCoreApplication.setApplicationName("Key Modulator")
 
     main_view = MainView()
     main_view.show()
