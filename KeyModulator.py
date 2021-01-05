@@ -33,7 +33,7 @@ class KeyModulator:
 
         self.freq_ratio = 2 ** (1/12)
 
-        self.logger = logging.getLogger(__name__)
+        self.logger = logging.getLogger("KeyModulator")
 
     def shift(self, semitone):
         self.logger.info("Shifting semitones")
@@ -130,6 +130,7 @@ class KeyModulator:
         try:
             normalized_audio = np.int16((self.new_audio / self.new_audio.max()) * 32767)
             sp_io_wav.write(path, self.sample_rate, normalized_audio)
+            self.logger.info("Completed")
         except Exception as e:
             logging.error(e)
             exit(-1)
@@ -194,7 +195,7 @@ def main(argv):
         exit()
 
     logging.basicConfig()
-    logger = logging.getLogger(__name__)
+    logger = logging.getLogger("KeyModulator")
     if verbose:
         logger.setLevel(logging.DEBUG)
     else:
@@ -202,8 +203,6 @@ def main(argv):
 
     ks = KeyModulator(frame_len=14000, overlap=0.75)
     ks.read(input)
-    # 7 semitones up = 1.5
-    # 7 semitones down = 0.67
     ks.shift(shift)
     ks.write(output)
 

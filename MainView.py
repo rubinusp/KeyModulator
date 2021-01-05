@@ -1,4 +1,5 @@
 # 1.Standard Modules
+import logging
 import sys
 
 # 2. Extension Modules
@@ -9,13 +10,16 @@ from PyQt5.QtGui import *
 # 3. Local Modules
 from KeyModulator import KeyModulator
 
+DEVELOP = True
+
+
 class MainView(QDialog):
 
     def __init__(self, parent=None):
 
         super().__init__(parent)
         self.setWindowTitle("Key Modulator")
-        self.resize(800, 650)
+        self.resize(800, 850)
         self.setWindowFlags(Qt.Dialog | Qt.CustomizeWindowHint | Qt.WindowTitleHint)
 
         # Shifter Property
@@ -39,7 +43,27 @@ class MainView(QDialog):
         self.progressTextEdit = None
         self.proc = None
 
+        # Logger
+        self.logger = None
+
         self._setup_ui()
+        self._setup_logger()
+
+    class LogHandler(logging.Handler):
+        def __init__(self, parent):
+            super().__init__()
+
+            self.parent = parent
+        
+        def emit(self, record):
+            self.parent.progressTextEdit.append(record.getMessage())
+            self.parent.progressTextEdit.repaint()
+
+    def _setup_logger(self):
+
+        self.logger = logging.getLogger("KeyModulator")
+        self.logger.setLevel(logging.INFO)
+        self.logger.addHandler(self.LogHandler(self))
 
     def _setup_ui(self):
 
@@ -85,10 +109,8 @@ class MainView(QDialog):
         controlGroupBox = QGroupBox("Control")
         controlGroupBox.setLayout(controlLayout)
 
-        # self.progressTextEdit = QTextEdit()
-        # self.proc = QProcess(self)
-        # self.proc.readyReadStandardOutput.connect(self._display_progress)
-        # self.proc.start()
+        self.progressTextEdit = QTextEdit()
+        self.progressTextEdit.resize(self.progressTextEdit.width(), 200)
 
         # Create standard button box
         self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, Qt.Horizontal)
@@ -107,9 +129,9 @@ class MainView(QDialog):
         # Set dialog layout
         self.setLayout(mainLayout)
 
-    # @pyqtSlot()
-    # def _display_progress(self):
-    #     self.progressTextEdit.setText("here")
+        if DEVELOP:
+            self.keySlider.setTickPosition(-5)
+            self.outputTextEdit.setText("homura_instrumental_-5")
 
     def _set_key_shift(self):
 
@@ -125,6 +147,8 @@ class MainView(QDialog):
     def _shift(self):
 
         try:
+            self.progressTextEdit.clear()
+
             self.outFile = f"{self.outputTextEdit.text()}.wav"
             self.keyModulator.read(self.inFile)
             self.keyModulator.shift(self.shift)
@@ -151,8 +175,7 @@ class MainView(QDialog):
             msg.exec_()
 
     def _on_success(self):
-        # Close the dialog
-        self.close()
+        return
 
 
 def main():
